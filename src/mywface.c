@@ -31,11 +31,11 @@ static void update_date() {
 	time_t temp = time(NULL);
 	struct tm* tick_time = localtime(&temp);
 
-	/* Write the current hours and minutes into a buffer */
+	/* Write the current date into a buffer */
 	static char s_date_buffer[16];
 	strftime(s_date_buffer, sizeof(s_date_buffer), "%a, %d %b", tick_time);
 
-	/* Display this time on the TextLayer */
+	/* Display date on the TextLayer */
 	text_layer_set_text(s_date_layer, s_date_buffer);
 }
 
@@ -46,10 +46,10 @@ static void update_step() {
 
 	step_count = (int)health_service_sum_today(HealthMetricStepCount);
 
-	/* Write the current hours and minutes into a buffer */
+	/* Write the current steps into a buffer */
 	snprintf(s_step_buffer, sizeof(s_step_buffer), "%d", step_count);
 
-	/* Display this time on the TextLayer */
+	/* Display steps on the TextLayer */
 	text_layer_set_text(s_step_layer, s_step_buffer);
 }
 
@@ -77,11 +77,11 @@ static void battery_handler() {
 		snprintf(s_battery, sizeof(s_battery), "%d%%", battery_info.charge_percent);
 	}
 
-	/* Display this time on the TextLayer */
+	/* Display battery status on the TextLayer */
 	text_layer_set_text(s_battery_layer, s_battery);
 }
 
-/* Function called when bluetooth connection statud changes */
+/* Function called when bluetooth connection status changes */
 static void bt_handler(bool connected) {
 	bool bt_connected;
 	static char s_bt[8];
@@ -96,6 +96,7 @@ static void bt_handler(bool connected) {
 		snprintf(s_bt, sizeof(s_bt), "  ");
 	}
 
+	/* Display connection status on the TextLayer */
 	text_layer_set_text(s_bt_layer, s_bt);
 }
 
@@ -104,22 +105,22 @@ static void main_window_load(Window* window) {
 	Layer* window_layer = window_get_root_layer(window);
 	GRect bounds = layer_get_bounds(window_layer);
 
-	/* Create the TextLayer with specific bounds */
+	/* Create the TextLayer with specific bounds. Only valid for Pebble/Pebble Time */
 	s_time_layer = text_layer_create(
-		GRect(0, PBL_IF_ROUND_ELSE(58,50), bounds.size.w, 50));
+		GRect(0, 60, bounds.size.w, 50));
 	s_date_layer = text_layer_create(
-		GRect(0, PBL_IF_ROUND_ELSE(90,144), bounds.size.w, 24));
+		GRect(0, 144, bounds.size.w, 24));
 	s_step_layer = text_layer_create(
-		GRect(MARGIN, PBL_IF_ROUND_ELSE(90,0), bounds.size.w*0.33-MARGIN-1, 30));
+		GRect(MARGIN, 0, bounds.size.w*0.33-MARGIN, 30));
 	s_bt_layer = text_layer_create(
-		GRect(bounds.size.w*0.33+2, PBL_IF_ROUND_ELSE(90,0), bounds.size.w*0.33-MARGIN, 30));
+		GRect(bounds.size.w*0.33+2, 0, bounds.size.w*0.33-MARGIN, 30));
 	s_battery_layer = text_layer_create(
-		GRect(bounds.size.w*0.67, PBL_IF_ROUND_ELSE(90,0), bounds.size.w*0.33-MARGIN, 30));
+		GRect(bounds.size.w*0.67, 0, bounds.size.w*0.33-MARGIN, 30));
 
 	/* Create GFont */
 	s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DGB_48));
 
-	/* Layout for text layer */
+	/* Layout for time layer */
 	text_layer_set_background_color(s_time_layer, GColorClear);
 	text_layer_set_text_color(s_time_layer, GColorBlack);
 	text_layer_set_font(s_time_layer, s_time_font);
@@ -159,7 +160,7 @@ static void main_window_load(Window* window) {
 }
 
 static void main_window_unload(Window* window) {
-	/* Destroy text layers */
+	/* Destroy text layers on unload */
 	text_layer_destroy(s_time_layer);
 	text_layer_destroy(s_date_layer);
 	text_layer_destroy(s_step_layer);
@@ -197,12 +198,12 @@ static void init() {
 	/* Show the Window on the watch, with animated=true */
 	window_stack_push(s_main_window, true);
 
-	/* Show the current time from the beggining */
+	/* Show the current data from the beggining */
 	update_time();
 	update_date();
 	update_step();
 	battery_handler();
-	bt_handler(true);
+	bt_handler(connection_service_peek_pebble_app_connection());
 }
 
 static void deinit() {
