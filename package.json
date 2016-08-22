@@ -24,12 +24,13 @@
     ],
     "resources": {
       "media": [
-        {
-          "type": "font",
-          "name": "FONT_DGB_48",
-          "file": "fonts/dgb.ttf",
-          "compatibility": "2.7"
-        }
+	    {
+	      "type": "font",
+	      "name": "FONT_SM_62",
+	      "characters": "[0-9]",
+	      "file": "fonts/DroidSansMono.ttf",
+	      "compatibility": "2.7"
+	    }
       ]
     }
   }
