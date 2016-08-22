@@ -1,9 +1,12 @@
 #include <pebble.h>
 
+#define MARGIN 3
+
 static Window* s_main_window;
 static TextLayer* s_time_layer;
 static TextLayer* s_date_layer;
 static TextLayer* s_step_layer;
+static TextLayer* s_battery_layer;
 
 static GFont s_time_font;
 
@@ -56,6 +59,23 @@ static void tick_handler(struct tm* tick_time, TimeUnits units_changed) {
 	update_date();
 }
 
+/* Function called when battery state changes */
+static void battery_handler() {
+	BatteryChargeState battery_info;
+	static char s_battery[8];
+
+	battery_info = battery_state_service_peek();
+
+	if(battery_info.is_charging) {
+		snprintf(s_battery, sizeof(s_battery), "CHR");
+	}
+	else {
+		snprintf(s_battery, sizeof(s_battery), "%d%%", battery_info.charge_percent);
+	}
+
+	/* Display this time on the TextLayer */
+	text_layer_set_text(s_battery_layer, s_battery);
+}
 
 static void main_window_load(Window* window) {
 	/* Get information about the Window */
@@ -66,9 +86,11 @@ static void main_window_load(Window* window) {
 	s_time_layer = text_layer_create(
 		GRect(0, PBL_IF_ROUND_ELSE(58,50), bounds.size.w, 50));
 	s_date_layer = text_layer_create(
-		GRect(0, PBL_IF_ROUND_ELSE(90,100), bounds.size.w, 30));
+		GRect(0, PBL_IF_ROUND_ELSE(90,138), bounds.size.w, 30));
 	s_step_layer = text_layer_create(
-		GRect(0, PBL_IF_ROUND_ELSE(90,130), bounds.size.w, 30));
+		GRect(MARGIN, PBL_IF_ROUND_ELSE(90,0), bounds.size.w*0.5, 30));
+	s_battery_layer = text_layer_create(
+		GRect(bounds.size.w*0.5+1, PBL_IF_ROUND_ELSE(90,0), bounds.size.w*0.5-MARGIN, 30));
 
 	/* Create GFont */
 	s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DGB_48));
@@ -90,13 +112,20 @@ static void main_window_load(Window* window) {
 	text_layer_set_background_color(s_step_layer, GColorLightGray);
 	text_layer_set_text_color(s_step_layer, GColorBlack);
 	text_layer_set_font(s_step_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
-	text_layer_set_text_alignment(s_step_layer, GTextAlignmentCenter);
+	text_layer_set_text_alignment(s_step_layer, GTextAlignmentLeft);
+
+	/* Layout for battery layer */
+	text_layer_set_background_color(s_battery_layer, GColorLightGray);
+	text_layer_set_text_color(s_battery_layer, GColorBlack);
+	text_layer_set_font(s_battery_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+	text_layer_set_text_alignment(s_battery_layer, GTextAlignmentRight);
 
 
 	/* Add it as a child layer to the Window's root layer */
 	layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
 	layer_add_child(window_layer, text_layer_get_layer(s_date_layer));
 	layer_add_child(window_layer, text_layer_get_layer(s_step_layer));
+	layer_add_child(window_layer, text_layer_get_layer(s_battery_layer));
 
 }
 
@@ -114,6 +143,9 @@ static void init() {
 	/* Register with TickTimerService */
 	tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
 
+	/* Register with BatteryStateService */
+	battery_state_service_subscribe(battery_handler); 
+
 	/* Create main window element and assign to pointer */
 	s_main_window = window_create();
 
@@ -130,6 +162,7 @@ static void init() {
 	update_time();
 	update_date();
 	update_step();
+	battery_handler();
 }
 
 static void deinit() {
