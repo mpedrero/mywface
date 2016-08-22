@@ -7,7 +7,6 @@ static TextLayer* s_time_layer;
 static TextLayer* s_date_layer;
 static TextLayer* s_step_layer;
 static TextLayer* s_battery_layer;
-
 static GFont s_time_font;
 
 
@@ -56,6 +55,10 @@ static void update_step() {
 /* Function called every minute by TickTimerService */
 static void tick_handler(struct tm* tick_time, TimeUnits units_changed) {
 	update_time();
+}
+
+/* Function called once a day to update the date */
+static void date_handler(struct tm* tick_date, TimeUnits units_changed) {
 	update_date();
 }
 
@@ -90,7 +93,7 @@ static void main_window_load(Window* window) {
 	s_step_layer = text_layer_create(
 		GRect(MARGIN, PBL_IF_ROUND_ELSE(90,0), bounds.size.w*0.5, 30));
 	s_battery_layer = text_layer_create(
-		GRect(bounds.size.w*0.5+1, PBL_IF_ROUND_ELSE(90,0), bounds.size.w*0.5-MARGIN, 30));
+		GRect(bounds.size.w*0.5+1, PBL_IF_ROUND_ELSE(90,0), bounds.size.w*0.5-MARGIN-1, 30));
 
 	/* Create GFont */
 	s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DGB_48));
@@ -134,14 +137,18 @@ static void main_window_unload(Window* window) {
 	text_layer_destroy(s_time_layer);
 	text_layer_destroy(s_date_layer);
 	text_layer_destroy(s_step_layer);
+	text_layer_destroy(s_battery_layer);
 
 	/* Destroy text font */
 	fonts_unload_custom_font(s_time_font);
 }
 
 static void init() {
-	/* Register with TickTimerService */
+	/* Register with TickTimerService once a minute to change time */
 	tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
+
+	/* Register with TickTimerService once a day to change date */
+	tick_timer_service_subscribe(DAY_UNIT, date_handler);
 
 	/* Register with BatteryStateService */
 	battery_state_service_subscribe(battery_handler); 
