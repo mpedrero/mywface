@@ -1,0 +1,36 @@
+{
+  "name": "mywface",
+  "author": "Korso",
+  "version": "1.0.0",
+  "keywords": ["pebble-app"],
+  "private": true,
+  "dependencies": {},
+  "capabilities": [ "health" ],
+  "pebble": {
+    "displayName": "mywface",
+    "uuid": "249ce9ac-9c82-4838-a5bf-6199f9080818",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "aplite",
+      "basalt",
+      "chalk"
+    ],
+    "watchapp": {
+      "watchface": true
+    },
+    "messageKeys": [
+      "dummy"
+    ],
+    "resources": {
+      "media": [
+        {
+          "type": "font",
+          "name": "FONT_DGB_48",
+          "file": "fonts/dgb.ttf",
+          "compatibility": "2.7"
+        }
+      ]
+    }
+  }
+}
