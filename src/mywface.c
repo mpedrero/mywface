@@ -7,6 +7,7 @@ static TextLayer* s_time_layer;
 static TextLayer* s_date_layer;
 static TextLayer* s_step_layer;
 static TextLayer* s_battery_layer;
+static TextLayer* s_bt_layer;
 static GFont s_time_font;
 
 
@@ -44,7 +45,7 @@ static void update_step() {
 	static char s_step_buffer[16];
 
 	step_count = (int)health_service_sum_today(HealthMetricStepCount);
-	//step_count = 1042;
+
 	/* Write the current hours and minutes into a buffer */
 	snprintf(s_step_buffer, sizeof(s_step_buffer), "%d", step_count);
 
@@ -80,6 +81,24 @@ static void battery_handler() {
 	text_layer_set_text(s_battery_layer, s_battery);
 }
 
+/* Function called when bluetooth connection statud changes */
+static void bt_handler(bool connected) {
+	bool bt_connected;
+	static char s_bt[8];
+
+	bt_connected = connected;
+
+	if(!bt_connected) {
+		snprintf(s_bt, sizeof(s_bt), "BT");
+		vibes_short_pulse();
+	}
+	else {
+		snprintf(s_bt, sizeof(s_bt), "  ");
+	}
+
+	text_layer_set_text(s_bt_layer, s_bt);
+}
+
 static void main_window_load(Window* window) {
 	/* Get information about the Window */
 	Layer* window_layer = window_get_root_layer(window);
@@ -89,15 +108,16 @@ static void main_window_load(Window* window) {
 	s_time_layer = text_layer_create(
 		GRect(0, PBL_IF_ROUND_ELSE(58,50), bounds.size.w, 50));
 	s_date_layer = text_layer_create(
-		GRect(0, PBL_IF_ROUND_ELSE(90,138), bounds.size.w, 30));
+		GRect(0, PBL_IF_ROUND_ELSE(90,144), bounds.size.w, 24));
 	s_step_layer = text_layer_create(
-		GRect(MARGIN, PBL_IF_ROUND_ELSE(90,0), bounds.size.w*0.5, 30));
+		GRect(MARGIN, PBL_IF_ROUND_ELSE(90,0), bounds.size.w*0.33-MARGIN-1, 30));
+	s_bt_layer = text_layer_create(
+		GRect(bounds.size.w*0.33+2, PBL_IF_ROUND_ELSE(90,0), bounds.size.w*0.33-MARGIN, 30));
 	s_battery_layer = text_layer_create(
-		GRect(bounds.size.w*0.5+1, PBL_IF_ROUND_ELSE(90,0), bounds.size.w*0.5-MARGIN-1, 30));
+		GRect(bounds.size.w*0.67, PBL_IF_ROUND_ELSE(90,0), bounds.size.w*0.33-MARGIN, 30));
 
 	/* Create GFont */
 	s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DGB_48));
-
 
 	/* Layout for text layer */
 	text_layer_set_background_color(s_time_layer, GColorClear);
@@ -123,12 +143,18 @@ static void main_window_load(Window* window) {
 	text_layer_set_font(s_battery_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
 	text_layer_set_text_alignment(s_battery_layer, GTextAlignmentRight);
 
+	/* Layout for bluetooth connection layer */
+	text_layer_set_background_color(s_bt_layer, GColorLightGray);
+	text_layer_set_text_color(s_bt_layer, GColorBlack);
+	text_layer_set_font(s_bt_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+	text_layer_set_text_alignment(s_bt_layer, GTextAlignmentCenter);
 
-	/* Add it as a child layer to the Window's root layer */
+	/* Add the layers as a child layers to the Window's root layer */
 	layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
 	layer_add_child(window_layer, text_layer_get_layer(s_date_layer));
 	layer_add_child(window_layer, text_layer_get_layer(s_step_layer));
 	layer_add_child(window_layer, text_layer_get_layer(s_battery_layer));
+	layer_add_child(window_layer, text_layer_get_layer(s_bt_layer));
 
 }
 
@@ -138,6 +164,7 @@ static void main_window_unload(Window* window) {
 	text_layer_destroy(s_date_layer);
 	text_layer_destroy(s_step_layer);
 	text_layer_destroy(s_battery_layer);
+	text_layer_destroy(s_bt_layer);
 
 	/* Destroy text font */
 	fonts_unload_custom_font(s_time_font);
@@ -152,6 +179,11 @@ static void init() {
 
 	/* Register with BatteryStateService */
 	battery_state_service_subscribe(battery_handler); 
+
+	/* Register with ConnectionService */
+	connection_service_subscribe((ConnectionHandlers) {
+		.pebble_app_connection_handler = bt_handler
+	});
 
 	/* Create main window element and assign to pointer */
 	s_main_window = window_create();
@@ -170,6 +202,7 @@ static void init() {
 	update_date();
 	update_step();
 	battery_handler();
+	bt_handler(true);
 }
 
 static void deinit() {
