@@ -1,20 +1,18 @@
 {
-  "name": "mywface",
-  "author": "Korso",
+  "name": "Mere",
+  "author": "Manuel Pedrero",
   "version": "1.0.0",
-  "keywords": ["pebble-app"],
-  "private": true,
+  "keywords": ["simple","digital","time","health"],
+  "private": false,
   "dependencies": {},
-  "capabilities": [ "health" ],
   "pebble": {
-    "displayName": "mywface",
+    "displayName": "Mere",
     "uuid": "249ce9ac-9c82-4838-a5bf-6199f9080818",
     "sdkVersion": "3",
     "enableMultiJS": true,
     "targetPlatforms": [
       "aplite",
-      "basalt",
-      "chalk"
+      "basalt"
     ],
     "watchapp": {
       "watchface": true
@@ -32,6 +30,7 @@
 	      "compatibility": "2.7"
 	    }
       ]
-    }
+    },
+  "capabilities": [ "health" ]
   }
 }

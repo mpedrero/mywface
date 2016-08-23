@@ -1,6 +1,6 @@
-# mywface
+# Mere
 
-Basic Watchface for Pebble Time. Displays
+Watchface focused in simplicity. Displays
 Time, date with weekday, Bluetooth status,
 steps (needs Pebble Health) and battery
 status.

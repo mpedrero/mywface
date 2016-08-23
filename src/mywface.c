@@ -1,9 +1,11 @@
 #include <pebble.h>
 
 #define MARGIN 3
-#define COLOR_FRONT GColorWhite
-#define COLOR_BACK  GColorBlack
-#define COLOR_DEBUG GColorLightGray
+#define COLOR_FRONT  GColorWhite
+#define COLOR_BACK   GColorBlack
+#define COLOR_DEBUG  GColorVividCerulean
+#define COLOR_BOTTOM GColorWhite
+#define COLOR_TOP    GColorYellow
 
 /* Leave for production code. Comment BOTH for debugging */
 #undef APP_LOG
@@ -76,7 +78,9 @@ static void update_step() {
 static void tick_handler(struct tm* tick_time, TimeUnits units_changed) {
 	if(units_changed & MINUTE_UNIT){
 		update_time();
+		#if defined(PBL_HEALTH)
 		update_step();
+		#endif
 	}
 	if(units_changed & DAY_UNIT){
 		update_date();
@@ -132,9 +136,9 @@ static void main_window_load(Window* window) {
 
 	/* Create the TextLayer with specific bounds. Only valid for Pebble/Pebble Time */
 	s_hour_layer = text_layer_create(
-		GRect(0, 22, bounds.size.w, 64));
+		GRect(0, 20, bounds.size.w, 64));
 	s_minute_layer = text_layer_create(
-		GRect(0, 74, bounds.size.w, 64));
+		GRect(0, 72, bounds.size.w, 64));
 	s_date_layer = text_layer_create(
 		GRect(0, 144, bounds.size.w, 24));
 	s_step_layer = text_layer_create(
@@ -158,25 +162,25 @@ static void main_window_load(Window* window) {
 
 	/* Layout for minute layer */
 	text_layer_set_background_color(s_minute_layer, COLOR_BACK);
-	text_layer_set_text_color(s_minute_layer, COLOR_FRONT);
+	text_layer_set_text_color(s_minute_layer, COLOR_DEBUG);
 	text_layer_set_font(s_minute_layer, s_time_font);
 	text_layer_set_text_alignment(s_minute_layer, GTextAlignmentCenter);
 
 	/* Layout for date layer */
 	text_layer_set_background_color(s_date_layer, COLOR_BACK);
-	text_layer_set_text_color(s_date_layer, COLOR_FRONT);
+	text_layer_set_text_color(s_date_layer, COLOR_BOTTOM);
 	text_layer_set_font(s_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
 	text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter);
 
 	/* Layout for step layer */
 	text_layer_set_background_color(s_step_layer, COLOR_BACK);
-	text_layer_set_text_color(s_step_layer, COLOR_FRONT);
+	text_layer_set_text_color(s_step_layer, COLOR_TOP);
 	text_layer_set_font(s_step_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
 	text_layer_set_text_alignment(s_step_layer, GTextAlignmentLeft);
 
 	/* Layout for battery layer */
 	text_layer_set_background_color(s_battery_layer, COLOR_BACK);
-	text_layer_set_text_color(s_battery_layer, COLOR_FRONT);
+	text_layer_set_text_color(s_battery_layer, COLOR_TOP);
 	text_layer_set_font(s_battery_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
 	text_layer_set_text_alignment(s_battery_layer, GTextAlignmentRight);
 
@@ -244,7 +248,9 @@ static void init() {
 	/* Show the current data from the beggining */
 	update_time();
 	update_date();
+	#if defined(PBL_HEALTH)
 	update_step();
+	#endif
 	battery_handler();
 	bt_handler(connection_service_peek_pebble_app_connection());
 	APP_LOG(APP_LOG_LEVEL_DEBUG, "Exiting init");
